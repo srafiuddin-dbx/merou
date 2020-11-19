@@ -566,11 +566,7 @@ class GroupGraph:
         # type: (str, bool) -> Dict[str, Dict[str, Any]]
         """ Get a permission and what groups and service accounts it's assigned to. """
         with self.lock:
-            data = {
-                "groups": {},
-                "service_accounts": {},
-                "audited": {},
-            }  # type: Dict[str, Dict[str, Any]]
+            data = {"groups": {}, "service_accounts": {}}  # type: Dict[str, Dict[str, Any]]
 
             # Get all mapped versions of the permission. This is only direct relationships.
             direct_groups = set()
@@ -615,13 +611,6 @@ class GroupGraph:
                         else:
                             data["service_accounts"][account] = {"permissions": [details]}
 
-            # Add permission audit value
-            permission_audited = False
-            for p in self._permissions.values():
-                if p.name == name:
-                    permission_audited = p.audited
-
-            data["audited"] = {"audited": permission_audited}
             return data
 
     def get_disabled_groups(self):
@@ -729,9 +718,6 @@ class GroupGraph:
                         continue
                     if self._permissions[grant.permission].audited:
                         group_audited = True
-                        perm_audited = True
-                    else:
-                        perm_audited = False
 
                     perm_data = {
                         "permission": grant.permission,
@@ -739,7 +725,6 @@ class GroupGraph:
                         "granted_on": (grant.granted_on - EPOCH).total_seconds(),
                         "distance": len(path) - 1,
                         "path": [elem[1] for elem in path],
-                        "audited": perm_audited,
                     }
 
                     if expose_aliases:
@@ -752,9 +737,6 @@ class GroupGraph:
                     continue
                 if self._permissions[grant.permission].audited:
                     group_audited = True
-                    perm_audited = True
-                else:
-                    perm_audited = False
 
                 perm_data = {
                     "permission": grant.permission,
@@ -762,7 +744,6 @@ class GroupGraph:
                     "granted_on": (grant.granted_on - EPOCH).total_seconds(),
                     "distance": 0,
                     "path": [groupname],
-                    "audited": perm_audited,
                 }
 
                 if expose_aliases:
